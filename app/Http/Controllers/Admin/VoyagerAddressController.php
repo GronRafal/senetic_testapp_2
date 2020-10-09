@@ -4,17 +4,15 @@ namespace App\Http\Controllers\Admin;
 
 use GuzzleHttp\Client;
 use Illuminate\Http\Request;
+use GuzzleHttp\Exception\ClientException;
 
 class VoyagerAddressController extends VoyagerBreadController
 {
     public function browse(){
-        $username = env("API_USER");
-        $password = env("API_PASS");
-
-        $client = new Client();
-        $response = $client->get('http://127.0.0.1:9201/api/customers', [
-            'auth' => [$username, $password]
+        $client = new Client([
+            'auth' => [env("API_USER"), env("API_PASS")]
         ]);
+        $response = $client->get('http://127.0.0.1:9201/api/customers');
 
         if ($response->getStatusCode() < 200 || $response->getStatusCode() >= 300) {
             return back()->with('danger','Login failed.');
@@ -25,34 +23,35 @@ class VoyagerAddressController extends VoyagerBreadController
     }
 
     public function create(Request $request, $consumer = null){
-        $username = env("API_USER");
-        $password = env("API_PASS");
-        $client = new Client([
-            'auth' => [$username, $password]
+        $request->validate([
+            'city' => 'required|min:3|max:255',
+            'street' => 'required|min:3|max:255'
         ]);
-        $response = $client->post('http://127.0.0.1:9201/api/customer/'.$request->customer.'/address' ,
-            array(
-                'form_params' => array(
-                    'city' => $request->city,
-                    'street' => $request->street
-                )
-            ));
+        $client = new Client([
+            'auth' => [env("API_USER"), env("API_PASS")]
+        ]);
+        try {
+            $response = $client->post('http://127.0.0.1:9201/api/customer/'.$request->customer.'/address',
+                array(
+                    'form_params' => array(
+                        'city' => $request->city,
+                        'street' => $request->street
+                    )
+                ));
+        } catch (ClientException $e) {
+            return redirect('admin/customer/'.$request->customer)->with(['message' => $e->getMessage(), 'alert-type' => 'error']);
+        }
         return redirect('admin/customer/'.$request->customer )->with(['message' => "Succesfull added new address!", 'alert-type' => 'success']);
     }
     public function show($id){
-        $username = env("API_USER");
-        $password = env("API_PASS");
-
-        $client = new Client();
-        $response = $client->get('http://127.0.0.1:9201/api/customer/'.$id, [
-            'auth' => [$username, $password]
+        $client = new Client([
+            'auth' => [env("API_USER"), env("API_PASS")]
         ]);
+        $response = $client->get('http://127.0.0.1:9201/api/customer/'.$id);
         $dataTypeContent = json_decode($response->getBody()->getContents());
         foreach ($dataTypeContent as $customer) {
         }
-        $response = $client->get('http://127.0.0.1:9201/api/customer/'.$id.'/addresses', [
-            'auth' => [$username, $password]
-        ]);
+        $response = $client->get('http://127.0.0.1:9201/api/customer/'.$id.'/addresses');
         $addresses = json_decode($response->getBody()->getContents());
         return view('customer.show', ['customer' => $customer, 'addresses' => $addresses]);
     }
@@ -62,13 +61,10 @@ class VoyagerAddressController extends VoyagerBreadController
     }
 
     public function edit($id = null){
-        $username = env("API_USER");
-        $password = env("API_PASS");
-
-        $client = new Client();
-        $response = $client->get('http://127.0.0.1:9201/api/address/'.$id, [
-            'auth' => [$username, $password]
+        $client = new Client([
+            'auth' => [env("API_USER"), env("API_PASS")]
         ]);
+        $response = $client->get('http://127.0.0.1:9201/api/address/'.$id);
         $dataTypeContent = json_decode($response->getBody()->getContents());
         foreach ($dataTypeContent as $address) {
         }
@@ -76,36 +72,36 @@ class VoyagerAddressController extends VoyagerBreadController
     }
 
     public function update(Request $request, $id){
-        $username = env("API_USER");
-        $password = env("API_PASS");
-
-        $client = new Client([
-            'auth' => [$username, $password]
+        $request->validate([
+            'city' => 'required|min:3|max:255',
+            'street' => 'required|min:3|max:255'
         ]);
-        $response = $client->put('http://127.0.0.1:9201/api/address/'.$id,
-            array(
-                'form_params' => array(
-                    'city' => $request->city,
-                    'street' => $request->street
-                )
-            ));
+        $client = new Client([
+            'auth' => [env("API_USER"), env("API_PASS")]
+        ]);
+        try {
+            $response = $client->put('http://127.0.0.1:9201/api/address/'.$id,
+                array(
+                    'form_params' => array(
+                        'city' => $request->city,
+                        'street' => $request->street
+                    )
+                ));
+        } catch (ClientException $e) {
+            return redirect('admin/customer/'.$request->customer)->with(['message' => $e->getMessage(), 'alert-type' => 'error']);
+        }
         return redirect('admin/customer/'.$request->customer )->with(['message' => "Succesfull edit the address!", 'alert-type' => 'success']);
     }
 
     public function destroy($id){
-        $username = env("API_USER");
-        $password = env("API_PASS");
-
-        $client = new Client();
-        $response = $client->get('http://127.0.0.1:9201/api/address/'.$id, [
-            'auth' => [$username, $password]
+        $client = new Client([
+            'auth' => [env("API_USER"), env("API_PASS")]
         ]);
+        $response = $client->get('http://127.0.0.1:9201/api/address/'.$id);
         $dataTypeContent = json_decode($response->getBody()->getContents());
         foreach ($dataTypeContent as $address) {
         }
-        $response = $client->delete('http://127.0.0.1:9201/api/address/'.$id, [
-            'auth' => [$username, $password]
-        ]);
+        $response = $client->delete('http://127.0.0.1:9201/api/address/'.$id);
         return redirect('admin/customer/'.$address->customer_id )->with(['message' => "Succesfull edit the address!", 'alert-type' => 'success']);
     }
 }
