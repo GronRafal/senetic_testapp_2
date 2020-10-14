@@ -1,0 +1,70 @@
+version: '3'
+services:
+
+  #PHP Service
+  app2:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: digitalocean.com/php
+    container_name: app2
+    restart: unless-stopped
+    tty: true
+    environment:
+      SERVICE_NAME: app2
+      SERVICE_TAGS: dev
+    working_dir: /var/www
+    volumes:
+      - ./:/var/www
+      - ./php/local.ini:/usr/local/etc/php/conf.d/local.ini
+    networks:
+      - app-network
+    depends_on:
+      - db2
+
+  #Nginx Service
+  webserver2:
+    image: nginx:alpine
+    container_name: webserver2
+    restart: unless-stopped
+    tty: true
+    ports:
+      - "9002:80"
+      - "444:443"
+    volumes:
+      - ./:/var/www
+      - ./nginx/conf.d/:/etc/nginx/conf.d/
+    networks:
+      - app-network
+
+  #MySQL Service
+  db2:
+    image: mysql:5.7.22
+    container_name: db2
+    restart: unless-stopped
+    tty: true
+    ports:
+      - "3308:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: master_mysql_root_password
+      MYSQL_USER: laraveluser
+      MYSQL_PASSWORD: laravel_db_password
+      MYSQL_DATABASE: laravel
+      SERVICE_TAGS: dev
+      SERVICE_NAME: mysql
+    volumes:
+      - /var/lib/mysql/
+      - ./mysql/my.cnf:/etc/mysql/my.cnf
+      - ./init.sql:/mysql/init.sql
+    networks:
+      - app-network
+    command: --init-file /mysql/init.sql
+
+#Docker Networks
+networks:
+  app-network:
+    driver: bridge
+#Volumes
+volumes:
+  dbdata:
+    driver: local

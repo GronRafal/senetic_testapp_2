@@ -12,7 +12,7 @@ class VoyagerCustomerController extends VoyagerBreadController
         $client = new Client([
             'auth' => [env("API_USER"), env("API_PASS")]
         ]);
-        $response = $client->get('http://127.0.0.1:9201/api/customers');
+        $response = $client->get('http://'.env("API_HOST").':'.env("API_PORT").'/api/customers');
 
         if ($response->getStatusCode() < 200 || $response->getStatusCode() >= 300) {
             return back()->with('danger','Login failed.');
@@ -30,7 +30,7 @@ class VoyagerCustomerController extends VoyagerBreadController
             'auth' => [env("API_USER"), env("API_PASS")]
         ]);
         try {
-            $response = $client->post('http://127.0.0.1:9201/api/customer/',
+            $response = $client->post('http://'.env("API_HOST").':'.env("API_PORT").'/api/customer/',
                 array(
                     'form_params' => array(
                         'name' => $request->name
@@ -45,11 +45,11 @@ class VoyagerCustomerController extends VoyagerBreadController
         $client = new Client([
             'auth' => [env("API_USER"), env("API_PASS")]
         ]);
-        $response = $client->get('http://127.0.0.1:9201/api/customer/'.$id);
+        $response = $client->get('http://'.env("API_HOST").':'.env("API_PORT").'/api/customer/'.$id);
         $dataTypeContent = json_decode($response->getBody()->getContents());
         foreach ($dataTypeContent as $customer) {
         }
-        $response = $client->get('http://127.0.0.1:9201/api/customer/'.$id.'/addresses');
+        $response = $client->get('http://'.env("API_HOST").':'.env("API_PORT").'/api/customer/'.$id.'/addresses');
         $addresses = json_decode($response->getBody()->getContents());
         return view('customer.show', ['customer' => $customer, 'addresses' => $addresses]);
     }
@@ -63,7 +63,7 @@ class VoyagerCustomerController extends VoyagerBreadController
             $client = new Client([
                 'auth' => [env("API_USER"), env("API_PASS")]
             ]);
-            $response = $client->get('http://127.0.0.1:9201/api/customer/'.$customer);
+            $response = $client->get('http://'.env("API_HOST").':'.env("API_PORT").'/api/customer/'.$customer);
             $dataTypeContent = json_decode($response->getBody()->getContents());
             foreach ($dataTypeContent as $customer) {
             }
@@ -82,7 +82,7 @@ class VoyagerCustomerController extends VoyagerBreadController
             'auth' => [env("API_USER"), env("API_PASS")]
         ]);
         try {
-            $response = $client->put('http://127.0.0.1:9201/api/customer/'.$id,
+            $response = $client->put('http://'.env("API_HOST").':'.env("API_PORT").'/api/customer/'.$id,
                 array(
                     'form_params' => array(
                         'name' => $request->name
@@ -98,7 +98,7 @@ class VoyagerCustomerController extends VoyagerBreadController
         $client = new Client([
             'auth' => [env("API_USER"), env("API_PASS")]
         ]);
-        $response = $client->delete('http://127.0.0.1:9201/api/customer/'.$id);
+        $response = $client->delete('http://'.env("API_HOST").':'.env("API_PORT").'/api/customer/'.$id);
         return redirect('admin/customer')->with(['message' => "Succesfull remove the customer!", 'alert-type' => 'success']);
     }
 }
